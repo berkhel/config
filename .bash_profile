@@ -42,4 +42,4 @@ export PATH=$PATH:$HOME/sonarqube-10.0.0.68432/bin/linux-x86-64
 export PATH=$PATH:$GOPATH
 export PATH=$PATH:$HOME/asciidoctorj-2.5.7-bin/asciidoctorj-2.5.7/bin
 export JAVA_HOME=/usr/include/Java/jdk-17
-GITHUB="https://github.com/mi-mmo-reb"; export GITHUB
+GITHUB="https://github.com/berkhel"; export GITHUB
