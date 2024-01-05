@@ -2,7 +2,7 @@ set nocompatible
 syntax on
 filetype plugin indent on
 set shell=powershell shellcmdflag=-c "set default shell
-"set guioptions+=! 
+set guioptions+=! 
 set termwintype=conpty "allow on windows to open terminal inside vim
 set pythonthreehome=~\\AppData\\Local\\Programs\\Python\\Python311
 set pythonthreedll=~\AppData\Local\Programs\Python\Python311\python311.dll "current python installation dll
