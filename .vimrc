@@ -155,52 +155,52 @@ let g:ENABLE_ALE = 0
 let g:ENABLE_COPILOT = 1
 let g:ENABLE_CHATGPT = 0
 call plug#begin('~/.vim/plugged')
-Plug '/mermaid.vim' "'https://github.com/mracos/mermaid.vim.git'
+Plug 'https://github.com/mracos/mermaid.vim.git'
 "Plug 'https://github.com/craigmac/vim-mermaid.git' "'/vim-mermaid'
 if has("gui_running")
-    Plug '/vim-airline' "'https://github.com/vim-airline/vim-airline.git'
+    Plug 'https://github.com/vim-airline/vim-airline.git'
 endif
-Plug '/nerdtree' "'https://github.com/preservim/nerdtree.git'
-Plug '/vim-fugitive' "'https://github.com/tpope/vim-fugitive.git'
+Plug 'https://github.com/preservim/nerdtree.git'
+Plug 'https://github.com/tpope/vim-fugitive.git'
 if has("gui_running") && g:ENABLE_YOUCOMPLETEME
-    Plug '/YouCompleteMe', { 'for': 'javascript' } "'https://github.com/ycm-core/YouCompleteMe.git'
+    Plug 'https://github.com/ycm-core/YouCompleteMe.git', { 'for': 'javascript' } "'/YouCompleteMe'
 endif
-Plug '/vim-gitgutter' "'https://github.com/airblade/vim-gitgutter.git'
-Plug '/vim-surround' "'https://github.com/tpope/vim-surround.git'
-Plug '/gruvbox' "'https://github.com/morhetz/gruvbox.git'
-Plug '/rainbow_csv' "'https://github.com/mechatroner/rainbow_csv.git'
+Plug 'https://github.com/airblade/vim-gitgutter.git'
+Plug 'https://github.com/tpope/vim-surround.git'
+Plug 'https://github.com/morhetz/gruvbox.git'
+Plug 'https://github.com/mechatroner/rainbow_csv.git'
 if g:ENABLE_SYNTASTIC
-    Plug '/syntastic' "'https://github.com/vim-syntastic/syntastic.git'
+    Plug 'https://github.com/vim-syntastic/syntastic.git'
 endif
-Plug '/vim-commentary' "'https://github.com/tpope/vim-commentary.git'
+Plug 'https://github.com/tpope/vim-commentary.git'
 Plug '/argtextobj'
-Plug '/vim-textobj-entire' "'https://github.com/kana/vim-textobj-entire.git'
-Plug '/vim-highlightedyank' "'https://github.com/machakann/vim-highlightedyank.git'
-Plug '/vim-textobj-user' "'https://github.com/kana/vim-textobj-user.git'
-Plug '/vim-indent-object' "'https://github.com/michaeljsmith/vim-indent-object.git' 
-Plug '/quick-scope' "'https://github.com/unblevable/quick-scope.git' 
-Plug '/vim-unimpaired' "'https://github.com/tpope/vim-unimpaired.git' 
-Plug '/vim-repeat' "'https://github.com/tpope/vim-repeat.git' 
-Plug '/vim-healthcheck' "'https://github.com/rhysd/vim-healthcheck.git' 
+Plug 'https://github.com/kana/vim-textobj-entire.git'
+Plug 'https://github.com/machakann/vim-highlightedyank.git'
+Plug 'https://github.com/kana/vim-textobj-user.git'
+Plug 'https://github.com/michaeljsmith/vim-indent-object.git' 
+Plug 'https://github.com/unblevable/quick-scope.git' 
+Plug 'https://github.com/tpope/vim-unimpaired.git' 
+Plug 'https://github.com/tpope/vim-repeat.git' 
+Plug 'https://github.com/rhysd/vim-healthcheck.git' 
 if g:ENABLE_COC
-    Plug '/coc.nvim', { 'for' : g:COC_FILETYPES.''  } "'https://github.com/neoclide/coc.nvim.git'
+    Plug 'https://github.com/neoclide/coc.nvim.git', { 'for' : g:COC_FILETYPES.''  } "'/coc.nvim'
 endif
-Plug '/git-lens.vim' "'https://github.com/Eliot00/git-lens.vim.git' 
-Plug '/fzf' , { 'do': { -> fzf#install() } } "'https://github.com/junegunn/fzf.git' 1)
-Plug '/fzf.vim' "'https://github.com/junegunn/fzf.vim.git' 2) you need both
-Plug 'https://github.com/vim-utils/vim-man.git' "'/vim-man'
+Plug 'https://github.com/Eliot00/git-lens.vim.git' 
+Plug 'https://github.com/junegunn/fzf.git' , { 'do': { -> fzf#install() } } " 1)
+Plug 'https://github.com/junegunn/fzf.vim.git' "2) you need both
+"Plug 'https://github.com/vim-utils/vim-man.git' "'/vim-man'
 "Plug 'https://github.com/yuki-yano/fzf-preview.vim', { 'branch': 'release/rpc' }
 if g:ENABLE_ALE
-    Plug '/ale' "'https://github.com/dense-analysis/ale.git' 
+    Plug 'https://github.com/dense-analysis/ale.git' 
 endif
 if g:ENABLE_COPILOT
-    Plug '/copilot.vim' "'https://github.com/github/copilot.vim.git', { 'on' : 'Copilot' }
+    Plug 'https://github.com/github/copilot.vim.git', { 'on' : 'Copilot' }
 endif
 if g:ENABLE_CHATGPT
     Plug 'https://github.com/CoderCookE/vim-chatgpt.git' "'/vim-chatgpt'
 endif
 "Plug 'https://github.com/img-paste-devs/img-paste.vim.git' "'/img-paste.vim'
-"this is good but not compliant with is security of accenture
+"this is good but not compliant with is security of the company
 call plug#end()
 
 "quickscope
@@ -447,19 +447,17 @@ if g:ENABLE_CHATGPT
     let g:chat_gpt_split_direction = 'vertical'
 endif
 
-"img-paste
-function! g:AsciidocPasteImage(relpath)
-execute "normal! iimage::" . a:relpath . "[]"
-let ipos = getcurpos()
-call setpos('.', ipos)
+"Download PasteIntoFile.exe from here -> https://github.com/eltos/PasteIntoFile
+"Paste images from clipboard to asciidoc file with <leader>p
+function! PasteIntoFile(img_name, img_format)
+    silent exec "!start PasteIntoFile.exe -d ".shellescape(expand('%:p:h')."\\img")." -f ".shellescape(a:img_name).".".a:img_format." --image-extension=".a:img_format." --autosave=true"
+    if a:img_format ==# 'html'
+        silent exec "!python -m vim.from_htmlbase64_to_png img\\".a:img_name.".html -o img\\".a:img_name.".png"
+        exec "normal! iimage::img/" . a:img_name . ".png[]"
+    else
+        exec "normal! iimage::img/" . a:img_name . ".".a:img_format."[]"
+    endif
+    let ipos = getcurpos()
+    call setpos('.', ipos)
 endfunction
-
-
-autocmd FileType markdown let g:PasteImageFunction = 'g:MarkdownPasteImage'
-autocmd FileType asciidoc let g:PasteImageFunction = 'g:AsciidocPasteImage'
-
-autocmd FileType markdown,asciidoc nmap <buffer><silent> <leader>p :call mdip#MarkdownClipboardImage()<CR>
-" there are some defaults for image directory and image name, you can change
-" them
-" " let g:mdip_imgdir = 'img'
-" " let g:mdip_imgname = 'image'
+autocmd FileType asciidoc nmap <buffer><silent> <leader>p :call PasteIntoFile(input("Filename:"), input("Format:"))<CR>
