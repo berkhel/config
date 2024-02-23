@@ -1,0 +1,35 @@
+import base64
+import re
+import argparse
+import sys
+from pathlib import Path
+
+
+parser = argparse.ArgumentParser('python -m from_htmlbase64_to_png',('Convert an html with base64 image to a png file'))
+parser.add_argument('infile',nargs='?',type=argparse.FileType(encoding='utf-8'),help='the HTML that contains the base64',default=sys.stdin)
+
+parser.add_argument('-o','--output', dest='outfile', nargs='?',type=Path,help='the output filename',default='out.png')
+
+
+options = parser.parse_args()
+
+with options.infile as infile:
+    try:
+        # Read the HTML file
+        html_content = infile.read()
+
+        # Extract the base64 string from the HTML
+        match = re.search(r'data:image/png;base64,([^"]+)', html_content)
+        if match:
+            base64_string = match.group(1)
+        else:
+            print("Error: Base64 string not found in the HTML.")
+            exit()
+
+
+        with open(options.outfile, 'wb') as f:
+                f.write(base64.b64decode(base64_string))
+
+
+    except ValueError as e:
+        raise SystemExit(e)
