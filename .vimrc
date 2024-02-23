@@ -1,9 +1,11 @@
 set nocompatible
 syntax on
 filetype plugin indent on
-set shell=powershell shellcmdflag=-c "set default shell
-set guioptions+=! 
-set termwintype=conpty "allow on windows to open terminal inside vim
+"set shell=powershell shellcmdflag=-c "set default shell to powershell
+if has("gui_running")
+    set guioptions+=! "use terminal inside Vim for :!<command>
+    set termwintype=conpty "allow on windows to open terminal inside vim
+endif
 set pythonthreehome=~\\AppData\\Local\\Programs\\Python\\Python311
 set pythonthreedll=~\AppData\Local\Programs\Python\Python311\python311.dll "current python installation dll
 set encoding=utf-8
@@ -43,24 +45,28 @@ inoremap <BS> <left><DEL>
 imap { {}<left>
 imap {<CR> {<CR>}<C-o>O
 inoremap ( ()<left>
-inoremap [ []<left>
+
+inoremap <silent> [ []<left>
 inoremap [<CR> [<CR>]<C-o>O
+
+"custom commands
+"IntelliJIdea
+command! Idea silent execute "!start /b idea64 ".shellescape(expand('%:p'))
+"VSCode
+command! Vscode silent execute "!start /b Code ".shellescape(expand('%:p'))
 
 "suppress error bell sound
 if has("gui_running")
     autocmd GUIEnter * set vb t_vb=
 endif
 
-"inoremap <M-]> <left><C-o>l<C-o>:call<space>search('[\])}]','cW')<return><C-o>a
-"move cursor at the end of the next parentheses [dependency with whichwrap:]
-
-"inoremap <M-[> <left><C-o>:call<space>GoToThePrevParentheses()<return>
-"move cursor at before the previous parentheses [dependency with whichwrap]
-
-
 function GoToThePrevParentheses()
     :s/\(^[\])}]\)/ \1/e
     return search('[\])}]','bcWp')
+endfunction
+
+function PrintAfterCursor(text)
+    exec "norm! a".a:text."\<right>"
 endfunction
 
 " AutoSave
@@ -79,8 +85,53 @@ endfunction
 command! AutoSaveToggle call ToggleAutoSave()
 
 "preview of asciidoc on chrome
+"and quick cite
+let g:bibfilename = 'bib.adoc'
+let g:diagram_renderer = '' " diagram | kroki
+let g:asciidoctor_js_live_preview = 1
+
+function BibCite(ref_id)
+    call PrintAfterCursor("[<<".g:bibfilename."#".a:ref_id.",".a:ref_id.">>]")
+endfunction
+
+function BuildAsciidoc(it_contains_diagrams)
+    if a:it_contains_diagrams
+        silent execute "!start /b asciidoctor -r asciidoctor-".g:diagram_renderer." ".shellescape(expand('%:p'))
+    else
+        silent execute "!start /b asciidoctor ".shellescape(expand('%:p'))
+    endif
+    " silent call system("asciidoctor --safe-mode=server -r ".g:diagram_renderer." ".shellescape(expand('%:p')))
+endfunction
+
+function PreviewAsciidoc()
+    let input_adoc = shellescape(expand('%:p'))
+    let output_html = shellescape(expand('%:p:r').".html")
+    if g:asciidoctor_js_live_preview
+        silent execute "!start chrome ".input_adoc
+    else
+        call BuildAsciidoc(g:diagram_renderer !=# '')
+        silent execute "!start chrome ".output_html
+    endif
+endfunction
+
 au BufNewFile,BufRead *.adoc
-            \ command! Preview silent execute "!chrome ".shellescape(expand('%:p')) 
+            \ command! Preview call PreviewAsciidoc()
+au BufNewFile,BufRead *.adoc
+            \ command! -nargs=1 Cite call BibCite(<f-args>)
+au BufNewFile,BufRead *.adoc
+            \ imap <C-B> <C-O>:Cite<Space>
+au BufNewFile,BufRead *.adoc
+            \ command! Bib exec 'find bib.adoc'
+au BufNewFile,BufRead *.adoc
+            \ command! LivePreviewToggle let g:asciidoctor_js_live_preview=!g:asciidoctor_js_live_preview
+au BufNewFile,BufRead *.adoc
+            \ command! Diagram let g:diagram_renderer='diagram' | let g:asciidoctor_js_live_preview=0
+au BufNewFile,BufRead *.adoc
+            \ command! Kroki let g:diagram_renderer='kroki' | let g:asciidoctor_js_live_preview=0
+au BufWritePost *.adoc
+           \ if !g:asciidoctor_js_live_preview |
+           \   call BuildAsciidoc(g:diagram_renderer !=# '') |
+           \ endif
 "call SetAutoSave() 
 
 "csv autodetect
@@ -99,36 +150,57 @@ au BufNewFile,BufRead *.csv,*.csv*txt
 let g:ENABLE_SYNTASTIC = 0
 let g:ENABLE_YOUCOMPLETEME = 0
 let g:ENABLE_COC = 1
+let g:COC_FILETYPES = 'javascript,c,cpp,asciidoc'
+let g:ENABLE_ALE = 0
+let g:ENABLE_COPILOT = 1
+let g:ENABLE_CHATGPT = 0
 call plug#begin('~/.vim/plugged')
-Plug 'https://github.com/mracos/mermaid.vim.git' "'/mermaid.vim'
+Plug '/mermaid.vim' "'https://github.com/mracos/mermaid.vim.git'
 "Plug 'https://github.com/craigmac/vim-mermaid.git' "'/vim-mermaid'
-Plug 'https://github.com/vim-airline/vim-airline.git' "'/vim-airline'
-Plug 'https://github.com/preservim/nerdtree.git' "'/nerdtree'
-Plug 'https://github.com/tpope/vim-fugitive.git' "'/vim-fugitive'
+if has("gui_running")
+    Plug '/vim-airline' "'https://github.com/vim-airline/vim-airline.git'
+endif
+Plug '/nerdtree' "'https://github.com/preservim/nerdtree.git'
+Plug '/vim-fugitive' "'https://github.com/tpope/vim-fugitive.git'
 if has("gui_running") && g:ENABLE_YOUCOMPLETEME
-    Plug 'https://github.com/ycm-core/YouCompleteMe.git', { 'for': 'javascript' } "'/YouCompleteMe'
+    Plug '/YouCompleteMe', { 'for': 'javascript' } "'https://github.com/ycm-core/YouCompleteMe.git'
 endif
-Plug 'https://github.com/airblade/vim-gitgutter.git' "'/vim-gitgutter'
-Plug 'https://github.com/tpope/vim-surround.git' "'/vim-surround'
-Plug 'https://github.com/morhetz/gruvbox.git' "'/gruvbox'
-Plug 'https://github.com/mechatroner/rainbow_csv.git' "'/rainbow_csv'
+Plug '/vim-gitgutter' "'https://github.com/airblade/vim-gitgutter.git'
+Plug '/vim-surround' "'https://github.com/tpope/vim-surround.git'
+Plug '/gruvbox' "'https://github.com/morhetz/gruvbox.git'
+Plug '/rainbow_csv' "'https://github.com/mechatroner/rainbow_csv.git'
 if g:ENABLE_SYNTASTIC
-    Plug 'https://github.com/vim-syntastic/syntastic.git' "'/syntastic'
+    Plug '/syntastic' "'https://github.com/vim-syntastic/syntastic.git'
 endif
-Plug 'https://github.com/tpope/vim-commentary.git' "'/vim-commentary'
+Plug '/vim-commentary' "'https://github.com/tpope/vim-commentary.git'
 Plug '/argtextobj'
-Plug 'https://github.com/kana/vim-textobj-entire.git' "/vim-textobj-entire'
-Plug 'https://github.com/machakann/vim-highlightedyank.git' "'/vim-highlightedyank'
-Plug 'https://github.com/kana/vim-textobj-user.git' "'/vim-textobj-user'
-Plug 'https://github.com/michaeljsmith/vim-indent-object.git' "'/vim-indent-object'
-Plug 'https://github.com/unblevable/quick-scope.git' "'/quick-scope'
-Plug 'https://github.com/tpope/vim-unimpaired.git' "'/vim-unimpaired'
-Plug 'https://github.com/tpope/vim-repeat.git' "'/vim-repeat'
-Plug 'https://github.com/rhysd/vim-healthcheck.git' "'/vim-healthcheck'
-if has("gui_running") && g:ENABLE_COC
-    Plug 'https://github.com/neoclide/coc.nvim.git', { 'for' : 'javascript' } "'/coc.nvim'
+Plug '/vim-textobj-entire' "'https://github.com/kana/vim-textobj-entire.git'
+Plug '/vim-highlightedyank' "'https://github.com/machakann/vim-highlightedyank.git'
+Plug '/vim-textobj-user' "'https://github.com/kana/vim-textobj-user.git'
+Plug '/vim-indent-object' "'https://github.com/michaeljsmith/vim-indent-object.git' 
+Plug '/quick-scope' "'https://github.com/unblevable/quick-scope.git' 
+Plug '/vim-unimpaired' "'https://github.com/tpope/vim-unimpaired.git' 
+Plug '/vim-repeat' "'https://github.com/tpope/vim-repeat.git' 
+Plug '/vim-healthcheck' "'https://github.com/rhysd/vim-healthcheck.git' 
+if g:ENABLE_COC
+    Plug '/coc.nvim', { 'for' : g:COC_FILETYPES.''  } "'https://github.com/neoclide/coc.nvim.git'
 endif
-Plug 'https://github.com/Eliot00/git-lens.vim.git' "'/git-lens.vim'
+Plug '/git-lens.vim' "'https://github.com/Eliot00/git-lens.vim.git' 
+Plug '/fzf' , { 'do': { -> fzf#install() } } "'https://github.com/junegunn/fzf.git' 1)
+Plug '/fzf.vim' "'https://github.com/junegunn/fzf.vim.git' 2) you need both
+Plug 'https://github.com/vim-utils/vim-man.git' "'/vim-man'
+"Plug 'https://github.com/yuki-yano/fzf-preview.vim', { 'branch': 'release/rpc' }
+if g:ENABLE_ALE
+    Plug '/ale' "'https://github.com/dense-analysis/ale.git' 
+endif
+if g:ENABLE_COPILOT
+    Plug '/copilot.vim' "'https://github.com/github/copilot.vim.git', { 'on' : 'Copilot' }
+endif
+if g:ENABLE_CHATGPT
+    Plug 'https://github.com/CoderCookE/vim-chatgpt.git' "'/vim-chatgpt'
+endif
+"Plug 'https://github.com/img-paste-devs/img-paste.vim.git' "'/img-paste.vim'
+"this is good but not compliant with is security of accenture
 call plug#end()
 
 "quickscope
@@ -153,16 +225,16 @@ if &ft =~ 'mermaid' "current mermaid plugin is incompatible with gruvbox
     autocmd colorscheme * syntax on
 endif
 "open terminal with gruvbox colors
-let g:terminals_open_array = []
+let g:terminals_open = []
 function OpenTerminalGruvbox()
     if g:colors_name ==# 'gruvbox'
         if &bg ==# 'light'
-            let first_word_color = "#282828"
-            hi Terminal guibg=#EDE0B9 
-            hi Terminal guifg=brown
+            let first_word_color = "#a52a2a"
+            hi Terminal guibg=#EDE0B9
+            hi Terminal guifg=#282828
         else
             let first_word_color = "#fe8019"
-            hi Terminal guibg=#32302F 
+            hi Terminal guibg=#32302F
             hi Terminal guifg=#40e0d0
         endif
         "#282828 black
@@ -181,11 +253,11 @@ function OpenTerminalGruvbox()
         "#8ec07c green
         "#fe8019 vivid orange
         "#FBF1C7 cream
-        for buf_num in g:terminals_open_array
+        for buf_num in g:terminals_open
             call term_setansicolors(buf_num, [
                         \"#282828", 
                         \"#CC241D", 
-                        \"#98971A", 
+                        \"#8ec07c", 
                         \"#D79921", 
                         \"#b8bb26", 
                         \"#B16286", 
@@ -203,7 +275,7 @@ function OpenTerminalGruvbox()
         endfor
     endif
 endfunction
-autocmd TerminalOpen * call add(g:terminals_open_array, buffer_number())  | call OpenTerminalGruvbox() 
+autocmd TerminalOpen * call add(g:terminals_open, buffer_number())  | call OpenTerminalGruvbox() 
 autocmd ColorScheme * call OpenTerminalGruvbox()
 "let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
 "let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
@@ -226,6 +298,10 @@ if &filetype =~ 'csv'
     nnoremap <expr> <C-Right> get(b:, 'rbcsv', 0) == 1 ? ':RainbowCellGoRight<CR>' : '<C-Right>'
     nnoremap <expr> <C-Up> get(b:, 'rbcsv', 0) == 1 ? ':RainbowCellGoUp<CR>' : '<C-Up>'
     nnoremap <expr> <C-Down> get(b:, 'rbcsv', 0) == 1 ? ':RainbowCellGoDown<CR>' : '<C-Down>'
+    command! RA RainbowAlign
+    command! Ra RainbowAlign
+    command! RS RainbowShrink
+    command! Rs RainbowShrink
 endif
 
 
@@ -243,6 +319,7 @@ set statusline+=%{GitStatus()}
 "git-fugitive
 command W Gwrite
 command C Git commit
+command P Git push -u origin main
 
 "syntastic
 if g:ENABLE_SYNTASTIC
@@ -259,15 +336,22 @@ endif
 let g:vim_json_warnings = 0
 
 "coc.nvim
-if has("gui_running") && g:ENABLE_COC && &filetype ==# 'javascript'
+if has("gui_running") && g:ENABLE_COC && ( g:COC_FILETYPES =~ &filetype )
+
+    au BufNewFile,BufRead * let b:coc_enabled = g:COC_FILETYPES =~ &filetype
+    command SpellToggle call CocAction('toggleExtension', 'coc-spell-checker')
 
     " Having longer updatetime (default is 4000 ms = 4s) leads to noticeable
     " delays and poor user experience
-    set updatetime=300
+    "set updatetime=300
 
     " Always show the signcolumn, otherwise it would shift the text each time
     " diagnostics appear/become resolved
     set signcolumn=yes
+
+    " Use <alt-space> to trigger completion.
+    inoremap <silent><expr> <C-Space> coc#refresh()
+    inoremap <C-@> <C-Space>
 
     " Use `[g` and `]g` to navigate diagnostics
     " Use `:CocDiagnostics` to get all diagnostics of current buffer in location list
@@ -332,3 +416,50 @@ endif
 "git-lens
 command! GitLensToggle call ToggleGitLens()
 
+
+"ale
+if g:ENABLE_ALE
+    let g:ale_fixers = {'groovy': ['npm-groovy-lint']}
+endif
+
+"copilot
+if g:ENABLE_COPILOT
+    "disable copilot by default
+    let b:copilot_enabled = v:false
+    command CopilotToggle let b:copilot_enabled = !b:copilot_enabled
+    "let g:copilot_filetypes = {
+    "     \ '*': v:false,
+    "     \ 'javascript': v:true,
+    "     \ }
+    "remap <tab> to <C-y>
+    imap <silent><script><expr> <C-Y> copilot#Accept("\<CR>")
+    let g:copilot_no_tab_map = v:true
+endif
+
+"chatgpt
+if g:ENABLE_CHATGPT
+    let g:openai_api_key='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'
+    let g:chat_gpt_max_tokens=2000
+    let g:chat_gpt_model='gpt-3.5-turbo'
+    let g:chat_gpt_session_mode=0
+    let g:chat_gpt_temperature = 0.7
+    let g:chat_gpt_lang = 'English'
+    let g:chat_gpt_split_direction = 'vertical'
+endif
+
+"img-paste
+function! g:AsciidocPasteImage(relpath)
+execute "normal! iimage::" . a:relpath . "[]"
+let ipos = getcurpos()
+call setpos('.', ipos)
+endfunction
+
+
+autocmd FileType markdown let g:PasteImageFunction = 'g:MarkdownPasteImage'
+autocmd FileType asciidoc let g:PasteImageFunction = 'g:AsciidocPasteImage'
+
+autocmd FileType markdown,asciidoc nmap <buffer><silent> <leader>p :call mdip#MarkdownClipboardImage()<CR>
+" there are some defaults for image directory and image name, you can change
+" them
+" " let g:mdip_imgdir = 'img'
+" " let g:mdip_imgname = 'image'
