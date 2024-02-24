@@ -65,6 +65,7 @@ function GoToThePrevParentheses()
     return search('[\])}]','bcWp')
 endfunction
 
+"useful for other function
 function PrintAfterCursor(text)
     exec "norm! a".a:text."\<right>"
 endfunction
@@ -83,6 +84,21 @@ function ToggleAutoSave()
     augroup END
 endfunction
 command! AutoSaveToggle call ToggleAutoSave()
+
+"Visual mode selection text (Visual Block not supported yet)
+function VisualModeSelectionText()
+    let old = getreginfo('@')
+    exec "norm! `<v`>y"
+    let txt = getreg('@')    
+    call setreg('@', old)
+    return txt
+endfunction
+
+"Search on Google
+function Google(keywords = substitute(VisualModeSelectionText(),'\n\|\r',' ','g')) range
+        silent execute "!start chrome --extra-search-query-params ".shellescape("https://www.google.it/search?q='".a:keywords."'")
+endfunction
+command! -nargs=? -range Google call Google(<f-args>)
 
 "preview of asciidoc on chrome
 "and quick cite
